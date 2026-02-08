@@ -1,20 +1,20 @@
-import sqlite3
-import src.database as db
-import src.weather_fetcher as weather
 import pytest
-import sys
 import os
 
-# Add src to path
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
+# Import from src package
+from src import weather_fetcher
+from src import database
+
+# Test database path
+TEST_DB_PATH = os.path.join(os.path.dirname(__file__), 'test_weather.db')
 
 
 class TestWeatherFetcher:
+    """Tests for weather fetching functionality."""
 
     def test_get_weather_valid_city(self):
         """Test fetching weather for a valid city"""
-        weather_data = weather.get_weather('London')  # Changed!
+        weather_data = weather_fetcher.get_weather('London')
 
         assert weather_data is not None
         assert 'city' in weather_data
@@ -24,12 +24,12 @@ class TestWeatherFetcher:
 
     def test_get_weather_invalid_city(self):
         """Test fetching weather for invalid city returns None"""
-        weather_data = weather.get_weather('InvalidCityNameXYZ123')  # Changed!
+        weather_data = weather_fetcher.get_weather('InvalidCityNameXYZ123')
         assert weather_data is None
 
     def test_weather_data_structure(self):
         """Test that weather data has correct structure"""
-        weather_data = weather.get_weather('Paris')  # Changed!
+        weather_data = weather_fetcher.get_weather('Paris')
 
         if weather_data:
             required_fields = ['city', 'temperature', 'feels_like',
@@ -44,14 +44,13 @@ class TestWeatherFetcher:
 
 
 class TestDatabase:
+    """Tests for database functionality."""
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         """Setup test database"""
-        TEST_DB_PATH = os.path.join(
-            os.path.dirname(__file__), 'test_weather.db')
-        db.DB_PATH = TEST_DB_PATH  # Changed!
-        db.init_database()  # Changed!
+        database.DB_PATH = TEST_DB_PATH
+        database.init_database()
 
         yield
 
@@ -69,7 +68,7 @@ class TestDatabase:
             'timestamp': '2024-01-01T12:00:00'
         }
 
-        result = db.save_weather(test_data)  # Changed!
+        result = database.save_weather(test_data)
         assert result is True
 
     def test_get_weather_history(self):
@@ -83,8 +82,8 @@ class TestDatabase:
             'timestamp': '2024-01-01T12:00:00'
         }
 
-        db.save_weather(test_data)  # Changed!
-        history = db.get_weather_history('TestCity', limit=1)  # Changed!
+        database.save_weather(test_data)
+        history = database.get_weather_history('TestCity', limit=1)
 
         assert len(history) == 1
         assert history[0]['city'] == 'TestCity'
@@ -100,9 +99,9 @@ class TestDatabase:
         ]
 
         for data in cities_data:
-            db.save_weather(data)  # Changed!
+            database.save_weather(data)
 
-        cities = db.get_all_cities()  # Changed!
+        cities = database.get_all_cities()
 
         assert len(cities) == 2
         assert 'London' in cities
@@ -110,14 +109,13 @@ class TestDatabase:
 
 
 class TestIntegration:
+    """Integration tests."""
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         """Setup test database"""
-        TEST_DB_PATH = os.path.join(
-            os.path.dirname(__file__), 'test_weather.db')
-        db.DB_PATH = TEST_DB_PATH  # Changed!
-        db.init_database()  # Changed!
+        database.DB_PATH = TEST_DB_PATH
+        database.init_database()
 
         yield
 
@@ -126,15 +124,12 @@ class TestIntegration:
 
     def test_fetch_and_save_workflow(self):
         """Test the complete workflow: fetch weather -> save -> retrieve"""
-        # Fetch weather
-        weather_data = weather.get_weather('Tokyo')  # Changed!
+        weather_data = weather_fetcher.get_weather('Tokyo')
         assert weather_data is not None
 
-        # Save to database
-        result = db.save_weather(weather_data)  # Changed!
+        result = database.save_weather(weather_data)
         assert result is True
 
-        # Retrieve from database
-        history = db.get_weather_history('Tokyo', limit=1)  # Changed!
+        history = database.get_weather_history('Tokyo', limit=1)
         assert len(history) == 1
         assert history[0]['city'] == 'Tokyo'
