@@ -1,0 +1,4 @@
+requests == 2.31.0 #to call weather api
+python-dotenv == 1.0.0 #to safely store our API key
+pytest == 7.4.3 #test library
+

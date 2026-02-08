@@ -1,0 +1,21 @@
+#python ignore
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+#database
+
+*.db
+data/*.db 
+
+#environment variables
+
+.env 
+
+#IDE
+.vscode/
+.idea/
